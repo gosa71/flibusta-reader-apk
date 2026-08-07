@@ -25,8 +25,17 @@ class Router {
           builder: (_) => BookPage(bookCard: settings.arguments),
         );
       case BookReaderPage.routeName:
+        final args = settings.arguments;
+        if (args is BookReaderPageArguments) {
+          return MaterialPageRoute(
+            builder: (_) => BookReaderPage(
+              filePath: args.filePath,
+              bookTitle: args.bookTitle,
+            ),
+          );
+        }
         return MaterialPageRoute(
-          builder: (_) => BookReaderPage(bookFilePath: settings.arguments as String),
+          builder: (_) => BookReaderPage(filePath: args as String),
         );
       case '/favorites':
         return MaterialPageRoute(builder: (_) => FavoritesPage());
