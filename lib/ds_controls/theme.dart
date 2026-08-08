@@ -7,6 +7,7 @@ ThemeData buildLightTheme() {
     primarySwatch: Colors.blue,
     brightness: Brightness.light,
     fontFamily: 'Inter',
+    visualDensity: VisualDensity.adaptivePlatformDensity,
   );
 }
 
@@ -15,5 +16,10 @@ ThemeData buildDarkTheme() {
     primarySwatch: Colors.blue,
     brightness: Brightness.dark,
     fontFamily: 'Inter',
+    visualDensity: VisualDensity.adaptivePlatformDensity,
   );
 }
+
+// aliases used by some files
+final kLightTheme = buildLightTheme();
+final kDarkTheme = buildDarkTheme();
