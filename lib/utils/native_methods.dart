@@ -37,4 +37,18 @@ class NativeMethods {
       print("setBrightness failed: " + e.toString());
     }
   }
+
+  /// Показать/скрыть системный UI (status bar + navigation bar).
+  static Future<void> setSystemUIVisible(bool visible) async {
+    if (!Platform.isAndroid) return;
+    try {
+      await SystemChrome.setEnabledSystemUIOverlays(
+        visible
+            ? SystemUiOverlay.values
+            : <SystemUiOverlay>[],
+      );
+    } catch (e) {
+      print("setSystemUIVisible failed: " + e.toString());
+    }
+  }
 }

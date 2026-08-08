@@ -76,7 +76,7 @@ class FlibustaApp extends StatelessWidget {
               const Locale('en', 'US'),
             ],
             locale: const Locale('ru', 'RU'),
-            onGenerateRoute: Router.generateRoute,
+            onGenerateRoute: AppRouter.generateRoute,
             initialRoute: '/',
             builder: (context, child) {
               return InternetChecker(child: child);

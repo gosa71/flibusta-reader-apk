@@ -9,7 +9,7 @@ import 'package:flibusta/pages/sequence/sequence_page.dart';
 import 'package:flibusta/pages/splash_screen.dart';
 import 'package:flutter/material.dart';
 
-class Router {
+class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case '/':
