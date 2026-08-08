@@ -1,19 +1,13 @@
-import 'package:flutter/gestures.dart';
 import 'package:flibusta/model/fb2/fb2_book.dart';
 import 'package:flibusta/pages/book_reader/components/reader_bookmarks_sheet.dart';
 import 'package:flibusta/pages/book_reader/components/reader_search_sheet.dart';
 import 'package:flibusta/pages/book_reader/components/reader_settings_sheet.dart';
 import 'package:flibusta/pages/book_reader/components/reader_toc_sheet.dart';
-import 'package:flibusta/pages/book_reader/reader_paginator.dart';
 import 'package:flibusta/pages/book_reader/reader_theme.dart';
 import 'package:flibusta/services/local_storage.dart';
 import 'package:flibusta/utils/fb2_parser.dart';
 import 'package:flibusta/utils/native_methods.dart';
 import 'package:flutter/material.dart';
-
-const double _kTopPadding = 12;
-const double _kBottomPadding = 12;
-const double _kFooterHeight = 44;
 
 class BookReaderPageArguments {
   final String filePath;
@@ -36,29 +30,19 @@ class BookReaderPage extends StatefulWidget {
 
 class _BookReaderPageState extends State<BookReaderPage> {
   Future<Fb2Book> _bookFuture;
-  Fb2Book _book;
-
-  List<ReaderPage> _pages;
-  PageController _pageController;
-  int _currentPageIndex = 0;
-  bool _paginating = false;
-  Size _lastPaginatedSize;
-  ReaderTypography _lastPaginatedTypography;
 
   double _fontSize = 18;
   int _themeIndex = 0;
   double _brightness = 1.0;
   double _margin = 24;
   bool _showSystemUI = true;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
-    _bookFuture = Fb2Parser.parseFromFile(widget.filePath).then((book) {
-      _book = book;
-      return book;
-    });
+    _bookFuture = Fb2Parser.parseFromFile(widget.filePath);
   }
 
   Future<void> _loadSettings() async {
@@ -72,176 +56,140 @@ class _BookReaderPageState extends State<BookReaderPage> {
 
   @override
   void dispose() {
-    _pageController?.dispose();
+    _scrollController.dispose();
     super.dispose();
-  }
-
-  void _paginate(Size size, ReaderTypography typography) {
-    if (_book == null || _paginating) return;
-    if (_lastPaginatedSize == size && _lastPaginatedTypography == typography) return;
-    _paginating = true;
-    _lastPaginatedSize = size;
-    _lastPaginatedTypography = typography;
-
-    final pages = ReaderPaginator.paginate(
-      book: _book,
-      size: size,
-      typography: typography,
-      margin: _margin,
-    );
-    if (mounted) {
-      setState(() {
-        _pages = pages;
-        _paginating = false;
-        if (_pageController == null) {
-          _pageController = PageController(initialPage: _currentPageIndex);
-        }
-      });
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final readerTheme = kReaderThemes[_themeIndex % kReaderThemes.length];
+
     return FutureBuilder<Fb2Book>(
       future: _bookFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
-          return Scaffold(body: Center(child: CircularProgressIndicator()));
+          return Scaffold(
+            backgroundColor: readerTheme.backgroundColor,
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
         if (snapshot.hasError || snapshot.data == null) {
           return Scaffold(
             appBar: AppBar(title: Text('Ошибка')),
-            body: Center(child: Text('Не удалось открыть книгу: ${snapshot.error}')),
+            body: Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  'Не удалось открыть книгу:\n${snapshot.error}',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
           );
         }
+
         final book = snapshot.data;
-        final readerTheme = kReaderThemes[_themeIndex % kReaderThemes.length];
-        final typography = ReaderTypography(
-          fontSize: _fontSize,
-          fontFamily: 'PTSerif',
-          lineHeight: 1.5,
-        );
+        final chapters = book.chapters ?? [];
 
         return Scaffold(
           backgroundColor: readerTheme.backgroundColor,
-          body: SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final size = Size(
-                  constraints.maxWidth,
-                  constraints.maxHeight - (_showSystemUI ? _kFooterHeight : 0),
-                );
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _paginate(size, typography);
-                });
-
-                if (_pages == null || _paginating) {
-                  return Center(child: CircularProgressIndicator());
-                }
-
-                return Column(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() => _showSystemUI = !_showSystemUI);
-                          try {
-                            NativeMethods.setSystemUIVisible(_showSystemUI);
-                          } catch (_) {}
-                        },
-                        child: PageView.builder(
-                          controller: _pageController,
-                          itemCount: _pages.length,
-                          onPageChanged: (i) => setState(() => _currentPageIndex = i),
-                          itemBuilder: (context, index) {
-                            final page = _pages[index];
-                            return Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: _margin,
-                                vertical: _kTopPadding,
-                              ),
-                              child: Text.rich(
-                                TextSpan(
-                                  children: page.spans ?? [],
-                                  style: TextStyle(
-                                    color: readerTheme.textColor,
-                                    fontSize: typography.fontSize,
-                                    fontFamily: typography.fontFamily,
-                                    height: typography.lineHeight,
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
+          appBar: _showSystemUI
+              ? AppBar(
+                  backgroundColor: readerTheme.appBarColor,
+                  title: Text(
+                    widget.bookTitle ?? book.title ?? 'Читалка',
+                    style: TextStyle(color: readerTheme.textColor, fontSize: 16),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  iconTheme: IconThemeData(color: readerTheme.textColor),
+                  actions: [
+                    IconButton(
+                      icon: Icon(Icons.list),
+                      onPressed: () {
+                        try {
+                          showReaderTocSheet(context, book, (_) {});
+                        } catch (_) {}
+                      },
                     ),
-                    if (_showSystemUI)
-                      Container(
-                        height: _kFooterHeight,
-                        color: readerTheme.backgroundColor.withOpacity(0.95),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            IconButton(
-                              icon: Icon(Icons.list, color: readerTheme.textColor),
-                              onPressed: () {
-                                try {
-                                  showReaderTocSheet(context, book, (ch) {});
-                                } catch (_) {}
-                              },
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.bookmark_border, color: readerTheme.textColor),
-                              onPressed: () {
-                                try {
-                                  showReaderBookmarksSheet(context);
-                                } catch (_) {}
-                              },
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.search, color: readerTheme.textColor),
-                              onPressed: () {
-                                try {
-                                  showReaderSearchSheet(context, book);
-                                } catch (_) {}
-                              },
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.settings, color: readerTheme.textColor),
-                              onPressed: () async {
-                                await showReaderSettingsMBS(
-                                  context,
-                                  fontSize: _fontSize,
-                                  themeIndex: _themeIndex,
-                                  brightness: _brightness,
-                                  margin: _margin,
-                                  onChanged: (fs, ti, br, m) {
-                                    setState(() {
-                                      _fontSize = fs;
-                                      _themeIndex = ti;
-                                      _brightness = br;
-                                      _margin = m;
-                                    });
-                                    final s = LocalStorage();
-                                    s.setReaderFontSize(fs);
-                                    s.setReaderThemeIndex(ti);
-                                    s.setReaderBrightness(br);
-                                    s.setReaderMargin(m);
-                                  },
-                                );
-                              },
-                            ),
-                            Text(
-                              '${_currentPageIndex + 1} / ${_pages.length}',
-                              style: TextStyle(
-                                color: readerTheme.textColor,
-                                fontSize: _fontSize - 2,
-                              ),
-                            ),
-                          ],
+                    IconButton(
+                      icon: Icon(Icons.settings),
+                      onPressed: () async {
+                        await showReaderSettingsMBS(
+                          context,
+                          fontSize: _fontSize,
+                          themeIndex: _themeIndex,
+                          brightness: _brightness,
+                          margin: _margin,
+                          onChanged: (fs, ti, br, m) {
+                            setState(() {
+                              _fontSize = fs;
+                              _themeIndex = ti;
+                              _brightness = br;
+                              _margin = m;
+                            });
+                            final s = LocalStorage();
+                            s.setReaderFontSize(fs);
+                            s.setReaderThemeIndex(ti);
+                            s.setReaderBrightness(br);
+                            s.setReaderMargin(m);
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                )
+              : null,
+          body: GestureDetector(
+            onTap: () {
+              setState(() => _showSystemUI = !_showSystemUI);
+              try {
+                NativeMethods.setSystemUIVisible(_showSystemUI);
+              } catch (_) {}
+            },
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: EdgeInsets.symmetric(horizontal: _margin, vertical: 16),
+              itemCount: chapters.length,
+              itemBuilder: (context, chapterIndex) {
+                final chapter = chapters[chapterIndex];
+                final blocks = chapter.blocks ?? [];
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (chapter.title != null && chapter.title.isNotEmpty)
+                      Padding(
+                        padding: EdgeInsets.only(bottom: 12, top: 8),
+                        child: Text(
+                          chapter.title,
+                          style: TextStyle(
+                            color: readerTheme.textColor,
+                            fontSize: _fontSize + 4,
+                            fontWeight: FontWeight.bold,
+                            height: 1.4,
+                          ),
                         ),
                       ),
+                    ...blocks.map((block) {
+                      final text = block.text ?? '';
+                      if (text.isEmpty && block.type == 'empty-line') {
+                        return SizedBox(height: _fontSize);
+                      }
+                      if (text.isEmpty) return SizedBox.shrink();
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: 10),
+                        child: Text(
+                          text,
+                          textAlign: TextAlign.justify,
+                          style: TextStyle(
+                            color: readerTheme.textColor,
+                            fontSize: _fontSize,
+                            height: 1.5,
+                          ),
+                        ),
+                      );
+                    }),
+                    SizedBox(height: 24),
                   ],
                 );
               },
