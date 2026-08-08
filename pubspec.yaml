@@ -77,6 +77,4 @@ flutter:
     - assets/img/tor_logo.svg
     - assets/img/onion_services.svg
     - assets/hyphenation/NOTICE.txt
-
-  # Fonts temporarily disabled until binary TTFs are pushed.
-  # App falls back to system fonts / Material defaults.
+    - assets/hyphenation/ru.json
