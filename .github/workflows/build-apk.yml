@@ -26,24 +26,27 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Ensure Gradle wrapper
+      - name: Bootstrap Gradle wrapper
         run: |
+          set -e
           cd android
+          mkdir -p gradle/wrapper
+          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
+            echo "Downloading gradle-wrapper.jar..."
+            curl -fsSL -o gradle/wrapper/gradle-wrapper.jar \
+              "https://raw.githubusercontent.com/gradle/gradle/v6.7.1/gradle/wrapper/gradle-wrapper.jar"
+          fi
           if [ ! -f gradlew ]; then
-            echo "Generating gradle wrapper..."
-            # Use Flutter's embedded gradle or download wrapper
-            curl -sL -o gradle/wrapper/gradle-wrapper.jar \
-              https://github.com/gradle/gradle/raw/v6.7.1/gradle/wrapper/gradle-wrapper.jar || true
-            cat > gradlew << 'EOF'
-#!/usr/bin/env sh
-# Gradle start up script for POSIX generated minimal
-DIR="$(cd "$(dirname "$0")" && pwd)"
-exec java -classpath "$DIR/gradle/wrapper/gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain "$@"
-EOF
+            echo "Creating gradlew..."
+            printf '%s\n' \
+              '#!/usr/bin/env sh' \
+              'DIR="$(cd "$(dirname "$0")" && pwd)"' \
+              'exec java -classpath "$DIR/gradle/wrapper/gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain "$@"' \
+              > gradlew
             chmod +x gradlew
           fi
           ls -la
-          ls -la gradle/wrapper/ || true
+          ls -la gradle/wrapper/
 
       - name: Build debug APK
         id: build
@@ -58,9 +61,7 @@ EOF
         uses: actions/upload-artifact@v4
         with:
           name: build-log
-          path: |
-            build_full.log
-            android/.gradle/**/*.log
+          path: build_full.log
           if-no-files-found: ignore
 
       - name: Upload APK artifact
@@ -74,6 +75,6 @@ EOF
       - name: Fail if build failed
         if: steps.build.outcome != 'success'
         run: |
-          echo "=== BUILD FAILED - last 80 lines of log ==="
-          tail -80 build_full.log || true
+          echo "=== BUILD FAILED - last 100 lines ==="
+          tail -100 build_full.log || true
           exit 1
