@@ -53,7 +53,7 @@ jobs:
         continue-on-error: true
         run: |
           set -o pipefail
-          flutter build apk --debug -v 2>&1 | tee build_full.log
+          flutter build apk --debug 2>&1 | tee build_full.log
           exit ${PIPESTATUS[0]}
 
       - name: Upload build log
@@ -72,9 +72,25 @@ jobs:
           path: build/app/outputs/flutter-apk/*.apk
           if-no-files-found: error
 
-      - name: Fail if build failed
+      - name: Show errors as annotations and fail
         if: steps.build.outcome != 'success'
         run: |
-          echo "=== BUILD FAILED - last 100 lines ==="
-          tail -100 build_full.log || true
+          echo "::error::flutter build apk --debug FAILED"
+          # Extract the most useful error lines
+          if [ -f build_full.log ]; then
+            # Print last 60 lines as errors (GitHub shows them in annotations)
+            tail -60 build_full.log | while IFS= read -r line; do
+              # skip pure progress noise
+              case "$line" in
+                *"Resolving dependencies"*|*"> Task"*|*"> Configure"*) continue ;;
+              esac
+              echo "::error::$line"
+            done
+            # Also dump grep for common error markers
+            echo "::group::Error markers"
+            grep -nE 'error:|Error:|FAILURE:|Exception|What went wrong|BUILD FAILED|A problem occurred' build_full.log | tail -40 || true
+            echo "::endgroup::"
+          else
+            echo "::error::build_full.log missing"
+          fi
           exit 1
