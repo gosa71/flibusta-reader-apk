@@ -25,8 +25,8 @@ class _HomePageState extends State<HomePage> {
             SizedBox(height: 24),
             Text('Откройте FB2 файл через читалку'),
             SizedBox(height: 16),
-            ElevatedButton(
-              child: Text('Тест читалки (укажите путь к .fb2)'),
+            RaisedButton(
+              child: Text('Тест читалки (путь к .fb2)'),
               onPressed: () {
                 Navigator.of(context).pushNamed(
                   BookReaderPage.routeName,
@@ -44,9 +44,9 @@ class _HomePageState extends State<HomePage> {
         currentIndex: _currentIndex,
         onTap: (i) => setState(() => _currentIndex = i),
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Главная'),
-          BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Книги'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Профиль'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), title: Text('Главная')),
+          BottomNavigationBarItem(icon: Icon(Icons.book), title: Text('Книги')),
+          BottomNavigationBarItem(icon: Icon(Icons.person), title: Text('Профиль')),
         ],
       ),
     );
