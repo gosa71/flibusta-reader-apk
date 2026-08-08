@@ -5,9 +5,12 @@ class Genre extends GridData {
   final String code;
 
   Genre({
+    int id,
     this.name,
     this.code,
-  }) : assert(id != null);
+  }) {
+    this.id = id;
+  }
 
   @override
   String get tileSubtitle => this.code;
