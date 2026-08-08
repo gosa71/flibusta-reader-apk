@@ -115,7 +115,7 @@ class _BookReaderPageState extends State<BookReaderPage> {
           );
         }
         final book = snapshot.data;
-        final readerTheme = ReaderTheme.themes[_themeIndex % ReaderTheme.themes.length];
+        final readerTheme = kReaderThemes[_themeIndex % kReaderThemes.length];
         final typography = ReaderTypography(
           fontSize: _fontSize,
           fontFamily: 'PTSerif',
