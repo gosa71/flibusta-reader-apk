@@ -60,7 +60,7 @@ dependencies:
   flutter_svg: ^0.18.1
 
   json_annotation: ^3.0.1
-  intl: ^0.16.1
+  intl: ^0.17.0
   archive: ^2.0.13
 
 dev_dependencies:
