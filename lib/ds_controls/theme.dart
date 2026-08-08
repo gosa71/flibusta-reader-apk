@@ -6,7 +6,6 @@ ThemeData buildLightTheme() {
   return ThemeData(
     primarySwatch: Colors.blue,
     brightness: Brightness.light,
-    fontFamily: 'Inter',
     visualDensity: VisualDensity.adaptivePlatformDensity,
   );
 }
@@ -15,7 +14,6 @@ ThemeData buildDarkTheme() {
   return ThemeData(
     primarySwatch: Colors.blue,
     brightness: Brightness.dark,
-    fontFamily: 'Inter',
     visualDensity: VisualDensity.adaptivePlatformDensity,
   );
 }

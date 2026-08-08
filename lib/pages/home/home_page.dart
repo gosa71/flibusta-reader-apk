@@ -25,7 +25,7 @@ class _HomePageState extends State<HomePage> {
             SizedBox(height: 24),
             Text('Откройте FB2 файл через читалку'),
             SizedBox(height: 16),
-            RaisedButton(
+            ElevatedButton(
               child: Text('Тест читалки (путь к .fb2)'),
               onPressed: () {
                 Navigator.of(context).pushNamed(
