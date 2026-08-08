@@ -1,4 +1,3 @@
-import 'package:flibusta/ds_controls/theme.dart';
 import 'package:flibusta/ds_controls/ui/show_modal_bottom_sheet.dart';
 import 'package:flibusta/pages/book_reader/reader_theme.dart';
 import 'package:flutter/material.dart';
@@ -89,10 +88,10 @@ class __ReaderSettingsContentState extends State<_ReaderSettingsContent> {
           Text('Тема'),
           Wrap(
             spacing: 8,
-            children: List.generate(ReaderTheme.themes.length, (i) {
-              final t = ReaderTheme.themes[i];
+            children: List.generate(kReaderThemes.length, (i) {
+              final t = kReaderThemes[i];
               return ChoiceChip(
-                label: Text('Тема ${i + 1}'),
+                label: Text(t.name ?? 'Тема ${i + 1}'),
                 selected: _themeIndex == i,
                 selectedColor: t.backgroundColor,
                 onSelected: (_) {
