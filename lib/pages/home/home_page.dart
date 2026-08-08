@@ -44,9 +44,9 @@ class _HomePageState extends State<HomePage> {
         currentIndex: _currentIndex,
         onTap: (i) => setState(() => _currentIndex = i),
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), title: Text('Главная')),
-          BottomNavigationBarItem(icon: Icon(Icons.book), title: Text('Книги')),
-          BottomNavigationBarItem(icon: Icon(Icons.person), title: Text('Профиль')),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: Text('Главная')),
+          BottomNavigationBarItem(icon: Icon(Icons.book), label: Text('Книги')),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: Text('Профиль')),
         ],
       ),
     );

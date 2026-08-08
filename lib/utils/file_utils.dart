@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
-import 'package:utopic_open_file/utopic_open_file.dart';
 
 class FileUtils {
   static Future<Directory> getStorageDir() async {
@@ -25,8 +24,10 @@ class FileUtils {
     return dir.listSync().where((e) => e.path.endsWith('.fb2') || e.path.endsWith('.zip')).toList();
   }
 
+  /// Open file with external app (stub without utopic_open_file).
   static Future<void> openFile(String path) async {
-    await OpenFile.open(path);
+    // no-op: package utopic_open_file was removed as unavailable
+    print('openFile stub: $path');
   }
 
   static Future<File> saveBookToFile(List<int> bytes, String fileName) async {
