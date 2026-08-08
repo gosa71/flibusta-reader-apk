@@ -12,34 +12,30 @@ class ReaderSearchResult {
 
 List<ReaderSearchResult> searchInBook(List<Fb2Chapter> chapters, String query) {
   if (query == null || query.trim().length < 2) return [];
-  var lowerQuery = query.trim().toLowerCase();
-  var results = <ReaderSearchResult>[];
+  final lowerQuery = query.trim().toLowerCase();
+  final results = <ReaderSearchResult>[];
 
   for (var chapterIndex = 0; chapterIndex < chapters.length; chapterIndex++) {
-    var blocks = chapters[chapterIndex].blocks;
+    final blocks = chapters[chapterIndex].blocks ?? [];
     for (var blockIndex = 0; blockIndex < blocks.length; blockIndex++) {
-      var block = blocks[blockIndex];
-      var text = block.text;
+      final text = blocks[blockIndex].text;
       if (text == null) continue;
-      var lowerText = text.toLowerCase();
-      var matchIndex = lowerText.indexOf(lowerQuery);
+      final lowerText = text.toLowerCase();
+      final matchIndex = lowerText.indexOf(lowerQuery);
       if (matchIndex == -1) continue;
 
-      var start = (matchIndex - 40).clamp(0, text.length);
-      var end = (matchIndex + lowerQuery.length + 60).clamp(0, text.length);
-      var snippet = (start > 0 ? '…' : '') +
+      final start = (matchIndex - 40).clamp(0, text.length);
+      final end = (matchIndex + lowerQuery.length + 60).clamp(0, text.length);
+      final snippet = (start > 0 ? '…' : '') +
           text.substring(start, end) +
           (end < text.length ? '…' : '');
 
-      // +1: в разбивке на страницы главы 0-й блок — синтетический
-      // заголовок главы, поэтому реальные блоки смещены на 1.
       results.add(ReaderSearchResult(
         chapterIndex: chapterIndex,
-        blockIndex: blockIndex + 1,
+        blockIndex: blockIndex,
         snippet: snippet,
       ));
-
-      if (results.length >= 200) return results;
+      if (results.length >= 50) return results;
     }
   }
   return results;
@@ -51,62 +47,71 @@ Future<ReaderSearchResult> showReaderSearchMBS(
 }) {
   return showDsModalBottomSheet<ReaderSearchResult>(
     context: context,
-    title: 'Поиск по книге',
+    title: 'Поиск',
     builder: (context) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          var results = <ReaderSearchResult>[];
-          var searching = false;
-
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    hintText: 'Что ищем?',
-                    prefixIcon: Icon(Icons.search),
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      searching = true;
-                      results = searchInBook(chapters, value);
-                    });
-                  },
-                ),
-                SizedBox(height: 8),
-                if (searching && results.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: Text('Ничего не найдено', style: TextStyle(color: Colors.black54)),
-                  ),
-                Flexible(
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    addSemanticIndexes: false,
-                    itemCount: results.length,
-                    separatorBuilder: (context, index) => Divider(indent: 16, height: 1),
-                    itemBuilder: (context, index) {
-                      var result = results[index];
-                      return ListTile(
-                        title: Text(
-                          result.snippet,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        onTap: () => Navigator.of(context).pop(result),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      );
+      return _SearchBody(chapters: chapters);
     },
   );
+}
+
+class _SearchBody extends StatefulWidget {
+  final List<Fb2Chapter> chapters;
+  const _SearchBody({this.chapters});
+
+  @override
+  __SearchBodyState createState() => __SearchBodyState();
+}
+
+class __SearchBodyState extends State<_SearchBody> {
+  final _controller = TextEditingController();
+  List<ReaderSearchResult> _results = [];
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _search(String q) {
+    setState(() {
+      _results = searchInBook(widget.chapters, q);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.all(12),
+          child: TextField(
+            controller: _controller,
+            decoration: InputDecoration(
+              hintText: 'Введите текст…',
+              prefixIcon: Icon(Icons.search),
+              border: OutlineInputBorder(),
+            ),
+            onChanged: _search,
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: _results.length,
+            itemBuilder: (context, i) {
+              final r = _results[i];
+              return ListTile(
+                title: Text(r.snippet ?? '', maxLines: 3),
+                onTap: () => Navigator.pop(context, r),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Alias used by BookReaderPage
+Future<void> showReaderSearchSheet(BuildContext context, Fb2Book book) async {
+  await showReaderSearchMBS(context, chapters: book.chapters ?? []);
 }

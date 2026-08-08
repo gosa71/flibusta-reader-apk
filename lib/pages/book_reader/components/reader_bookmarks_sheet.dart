@@ -18,44 +18,36 @@ Future<ReaderBookmark> showReaderBookmarksMBS(
     context: context,
     title: 'Закладки',
     builder: (context) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          if (bookmarks.isEmpty) {
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-              child: Text(
-                'Пока нет закладок. Добавить можно кнопкой с флажком в читалке.',
-                style: TextStyle(color: Colors.black54),
-              ),
-            );
-          }
-          return ListView.separated(
-            shrinkWrap: true,
-            addSemanticIndexes: false,
-            itemCount: bookmarks.length,
-            separatorBuilder: (context, index) => Divider(indent: 16, height: 1),
-            itemBuilder: (context, index) {
-              var bookmark = bookmarks[index];
-              return ListTile(
-                leading: Icon(Icons.bookmark),
-                title: Text(
-                  bookmark.label.isNotEmpty ? bookmark.label : 'Закладка',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                trailing: IconButton(
-                  icon: Icon(Icons.delete_outline, size: 20),
-                  onPressed: () {
-                    onDelete(bookmark);
-                    setState(() => bookmarks.removeAt(index));
-                  },
-                ),
-                onTap: () => Navigator.pop(context, bookmark),
-              );
-            },
+      if (bookmarks == null || bookmarks.isEmpty) {
+        return Padding(
+          padding: EdgeInsets.all(24),
+          child: Center(child: Text('Нет закладок')),
+        );
+      }
+      return ListView.builder(
+        shrinkWrap: true,
+        itemCount: bookmarks.length,
+        itemBuilder: (context, index) {
+          final b = bookmarks[index];
+          return ListTile(
+            title: Text(b.label ?? 'Закладка ${index + 1}'),
+            trailing: IconButton(
+              icon: Icon(Icons.delete_outline),
+              onPressed: () => onDelete(b),
+            ),
+            onTap: () => Navigator.pop(context, b),
           );
         },
       );
     },
+  );
+}
+
+/// Alias used by BookReaderPage
+Future<void> showReaderBookmarksSheet(BuildContext context) async {
+  await showReaderBookmarksMBS(
+    context,
+    bookmarks: [],
+    onDelete: (_) {},
   );
 }

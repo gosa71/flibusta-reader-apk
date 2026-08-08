@@ -13,15 +13,13 @@ Future<int> showReaderTocMBS(
     builder: (context) {
       return ListView.separated(
         shrinkWrap: true,
-        addSemanticIndexes: false,
         itemCount: chapters.length,
         separatorBuilder: (context, index) => Divider(indent: 16, height: 1),
         itemBuilder: (context, index) {
-          var isCurrent = index == currentChapterIndex;
-
+          final isCurrent = index == currentChapterIndex;
           return ListTile(
             title: Text(
-              chapters[index].title,
+              chapters[index].title ?? 'Глава ${index + 1}',
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
@@ -35,4 +33,19 @@ Future<int> showReaderTocMBS(
       );
     },
   );
+}
+
+/// Alias used by BookReaderPage
+Future<void> showReaderTocSheet(
+  BuildContext context,
+  Fb2Book book,
+  void Function(int chapterIndex) onSelect,
+) async {
+  final chapters = book.chapters ?? [];
+  final idx = await showReaderTocMBS(
+    context,
+    chapters: chapters,
+    currentChapterIndex: 0,
+  );
+  if (idx != null) onSelect(idx);
 }
