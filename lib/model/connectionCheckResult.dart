@@ -1,8 +1,6 @@
-import 'package:flibusta/model/extension_methods/dio_error_extension.dart';
-
 class ConnectionCheckResult {
   int latency;
-  DsError error;
+  Object error;
 
   ConnectionCheckResult({
     this.latency,
