@@ -7,8 +7,6 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
-    <!-- android:requestLegacyExternalStorage="true" -->
-
     <application
         android:label="Флибуста"
         android:icon="@mipmap/ic_launcher"
@@ -31,8 +29,7 @@
 
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
-                android:resource="@style/AppTheme.Splash"
-                />
+                android:resource="@style/AppTheme.Splash" />
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
