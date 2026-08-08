@@ -8,6 +8,7 @@ class ProxyHttpClient {
   Dio _dio = Dio(BaseOptions(
     connectTimeout: 15000,
     receiveTimeout: 30000,
+    baseUrl: 'http://flibusta.is',
   ));
 
   Dio get dio => _dio;
@@ -18,8 +19,14 @@ class ProxyHttpClient {
   }
 
   void setProxy(String proxy) {
-    // TODO: apply proxy / socks
+    // TODO apply proxy
   }
 
   void clearProxy() {}
+
+  void setHostAddress(String url) {
+    _dio.options.baseUrl = url ?? 'http://flibusta.is';
+  }
+
+  Future<void> initCookieJar() async {}
 }

@@ -1,10 +1,46 @@
 import 'dart:async';
-import 'dart:convert';
+import 'dart:io';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path_provider/path_provider.dart';
 
 class LocalStorage {
   Future<SharedPreferences> get _prefs async => SharedPreferences.getInstance();
+
+  Future<void> checkVersion() async {}
+
+  Future<String> getActualProxy() async {
+    final p = await _prefs;
+    return p.getString('actual_proxy') ?? '';
+  }
+
+  Future<void> setActualProxy(String proxy) async {
+    final p = await _prefs;
+    await p.setString('actual_proxy', proxy);
+  }
+
+  Future<String> getHostAddress() async {
+    final p = await _prefs;
+    return p.getString('host_address') ?? 'http://flibusta.is';
+  }
+
+  Future<void> setHostAddress(String url) async {
+    final p = await _prefs;
+    await p.setString('host_address', url);
+  }
+
+  Future<Directory> getBooksDirectory() async {
+    final p = await _prefs;
+    final path = p.getString('books_directory');
+    if (path != null) return Directory(path);
+    final dir = await getExternalStorageDirectory();
+    return Directory('${dir.path}/FlibustaBooks');
+  }
+
+  Future<void> setBooksDirectory(Directory dir) async {
+    final p = await _prefs;
+    await p.setString('books_directory', dir.path);
+  }
 
   // Reader settings
   Future<double> getReaderFontSize() async {
@@ -47,7 +83,6 @@ class LocalStorage {
     await p.setDouble('reader_margin', v);
   }
 
-  // Proxy / formats / languages stubs used by blocs
   Future<List<String>> getProxyList() async {
     final p = await _prefs;
     return p.getStringList('proxy_list') ?? [];
@@ -78,7 +113,6 @@ class LocalStorage {
     await p.setStringList('book_languages', list);
   }
 
-  // Generic
   Future<bool> getBool(String key, {bool defaultValue = false}) async {
     final p = await _prefs;
     return p.getBool(key) ?? defaultValue;
